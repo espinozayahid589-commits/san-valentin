@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Briseyda ✨</title>
+
+<style>
+body{
+    margin:0;
+    background:radial-gradient(circle at top,#120018,#000);
+    overflow-x:hidden;
+    font-family:'Segoe UI',sans-serif;
+    color:white;
+}
+
+/* contenedor principal */
+#container{
+    position:relative;
+    height:100vh;
+}
+
+/* canvas fondo REAL */
+#canvas{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    z-index:0;
+    pointer-events:none;
+}
+
+/* panel */
+#panel{
+    position:relative;
+    z-index:2;
+    width:clamp(300px,32vw,420px);
+    height:100vh;
+    padding:40px 30px 60px;
+    box-sizing:border-box;
+    background:rgba(0,0,0,0.45);
+    backdrop-filter:blur(15px);
+    box-shadow:0 0 40px rgba(255,0,120,0.25);
+    overflow-y:auto;
+}
+
+/* nombre neon */
+.neon-name{
+    position:absolute;
+    top:20px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:42px;
+    color:#ffb3da;
+    text-shadow:0 0 15px #ff4da6,0 0 35px #ff4da6;
+    z-index:3;
+}
+
+h1{ color:#ffb3da; }
+
+.counter{
+    margin-top:20px;
+    padding:18px;
+    border-radius:15px;
+    background:rgba(255,255,255,0.05);
+    transition:.4s;
+}
+
+.counter.glow{
+    box-shadow:0 0 40px #ff4da6;
+}
+
+button{
+    margin-top:25px;
+    padding:14px 24px;
+    border:none;
+    border-radius:25px;
+    background:#ff4da6;
+    color:white;
+    font-size:1em;
+    cursor:pointer;
+    transition:.3s;
+}
+button:hover{ transform:scale(1.08); }
+
+#letter{
+    margin-top:20px;
+    opacity:0;
+    transition:1.5s;
+}
+#letter.show{ opacity:1; }
+
+</style>
+</head>
+
+<body>
+
+<div id="container">
+
+<canvas id="canvas"></canvas>
+
+<div class="neon-name">Briseyda ✨</div>
+
+<div id="panel">
+<h1>Briseyda… ¿aceptas ser mi San Valentín? 🌷</h1>
+
+<div class="counter" id="counterBox">
+<div id="years"></div>
+<div id="months"></div>
+<div id="days"></div>
+<div id="moments">💖 Momentos guardados: 0</div>
+</div>
+
+<button onclick="celebrate()">Sí 💗</button>
+
+<div id="letter">
+<p>
+Si me dices que sí…<br>
+no prometo un cuento perfecto,<br>
+pero sí un amor sincero, tranquilo y real…<br>
+como la luna cuando ilumina sin hacer ruido 🌙
+<br><br>
+<b>Ahora empieza nuestra historia… ❤️</b>
+</p>
+</div>
+</div>
+</div>
+
+<script>
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+
+function resize(){
+    canvas.width=window.innerWidth;
+    canvas.height=window.innerHeight;
+}
+window.addEventListener("resize",resize);
+resize();
+
+let branchPoints=[];
+let petals=[];
+let stars=[];
+let comets=[];
+let attract=false;
+let moments=0;
+let celebrationLevel=0;
+
+const counterBox=document.getElementById("counterBox");
+
+const startDate=new Date(2024,1,14);
+const yearsEl=document.getElementById("years");
+const monthsEl=document.getElementById("months");
+const daysEl=document.getElementById("days");
+
+function updateCounter(){
+    const now=new Date();
+    let years=now.getFullYear()-startDate.getFullYear();
+    let months=now.getMonth()-startDate.getMonth();
+    let days=now.getDate()-startDate.getDate();
+
+    if(days<0){
+        months--;
+        const prevMonth=new Date(now.getFullYear(),now.getMonth(),0);
+        days+=prevMonth.getDate();
+    }
+    if(months<0){
+        years--;
+        months+=12;
+    }
+
+    yearsEl.innerText=`❤️ Años: ${years}`;
+    monthsEl.innerText=`🌷 Meses: ${months}`;
+    daysEl.innerText=`🌸 Días: ${days}`;
+}
+setInterval(updateCounter,60000);
+updateCounter();
+
+/* estrellas */
+for(let i=0;i<150;i++){
+    stars.push({
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height,
+        size:Math.random()*2,
+        alpha:Math.random()
+    });
+}
+
+/* luna */
+function drawMoon(){
+    const r=50+Math.sin(Date.now()*0.002)*4+celebrationLevel*12;
+    ctx.shadowBlur=30;
+    ctx.shadowColor="white";
+    ctx.beginPath();
+    ctx.arc(canvas.width-100,100,r,0,Math.PI*2);
+    ctx.fillStyle="white";
+    ctx.fill();
+    ctx.shadowBlur=0;
+}
+
+/* árbol */
+function drawBranch(x,y,len,angle,depth){
+    if(depth===0) return;
+
+    const x2=x+len*Math.cos(angle);
+    const y2=y+len*Math.sin(angle);
+
+    ctx.strokeStyle="#1a0d0d";
+    ctx.lineWidth=depth;
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+
+    if(depth<5) branchPoints.push({x:x2,y:y2});
+
+    drawBranch(x2,y2,len*0.75,angle-0.4,depth-1);
+    drawBranch(x2,y2,len*0.75,angle+0.4,depth-1);
+}
+
+/* pétalos */
+function createPetal(p){
+    return{
+        x:p.x,
+        y:p.y,
+        size:6+Math.random()*3,
+        absorbed:false
+    }
+}
+
+function drawPetal(p){
+    ctx.save();
+    ctx.translate(p.x,p.y);
+    ctx.rotate(Date.now()*0.0003);
+    ctx.shadowBlur=20;
+    ctx.shadowColor="#ff4da6";
+    ctx.fillStyle="#ff4da6";
+    ctx.beginPath();
+    ctx.ellipse(0,0,p.size,p.size*1.6,Math.PI/4,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+}
+
+/* cometas */
+function createComet(){
+    comets.push({
+        x:-50,
+        y:Math.random()*canvas.height*0.4,
+        vx:5+Math.random()*3,
+        vy:2+Math.random()*2,
+        alpha:1
+    });
+}
+
+function celebrate(){
+    attract=true;
+    celebrationLevel=1;
+    document.body.style.background="radial-gradient(circle,#ff4da6,#000)";
+    document.getElementById("letter").classList.add("show");
+}
+
+/* animación */
+function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    /* estrellas */
+    stars.forEach(s=>{
+        s.alpha+=(Math.random()-0.5)*0.05;
+        ctx.fillStyle=`rgba(255,255,255,${Math.abs(s.alpha)})`;
+        ctx.beginPath();
+        ctx.arc(s.x,s.y,s.size,0,Math.PI*2);
+        ctx.fill();
+    });
+
+    drawMoon();
+
+    branchPoints=[];
+    drawBranch(canvas.width/2,canvas.height,150,-Math.PI/2,9);
+
+    if(branchPoints.length>0 && petals.length===0){
+        for(let i=0;i<160;i++){
+            const p=branchPoints[Math.floor(Math.random()*branchPoints.length)];
+            petals.push(createPetal(p));
+        }
+    }
+
+    petals.forEach(p=>{
+        if(attract && !p.absorbed){
+            const rect=counterBox.getBoundingClientRect();
+            const tx=rect.left+rect.width/2;
+            const ty=rect.top+rect.height/2;
+
+            p.x+=(tx-p.x)*0.07;
+            p.y+=(ty-p.y)*0.07;
+
+            if(Math.abs(tx-p.x)<8){
+                p.absorbed=true;
+                moments++;
+                document.getElementById("moments").innerText=`💖 Momentos guardados: ${moments}`;
+                counterBox.classList.add("glow");
+                setTimeout(()=>counterBox.classList.remove("glow"),200);
+
+                const np=branchPoints[Math.floor(Math.random()*branchPoints.length)];
+                petals.push(createPetal(np));
+            }
+        }
+        drawPetal(p);
+    });
+
+    petals=petals.filter(p=>!p.absorbed);
+
+    /* cometas */
+    if(Math.random()<0.02) createComet();
+
+    ctx.lineCap="round";
+
+    comets.forEach(c=>{
+        ctx.strokeStyle=`rgba(255,255,255,${c.alpha})`;
+        ctx.lineWidth=2.2;
+        ctx.beginPath();
+        ctx.moveTo(c.x,c.y);
+        ctx.lineTo(c.x-c.vx*12,c.y-c.vy*12);
+        ctx.stroke();
+
+        c.x+=c.vx;
+        c.y+=c.vy;
+        c.alpha-=0.012;
+    });
+
+    comets=comets.filter(c=>c.alpha>0 && c.x<canvas.width+100);
+
+    requestAnimationFrame(animate);
+}
+animate();
+</script>
+
+</body>
+</html>
